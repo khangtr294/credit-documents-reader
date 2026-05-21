@@ -309,9 +309,9 @@ async function callAPI(bank){
     if(mt==='application/pdf'){content.push({type:'document',source:{type:'base64',media_type:'application/pdf',data:b64}});}
     else{content.push({type:'image',source:{type:'base64',media_type:mt.startsWith('image/')?mt:'image/jpeg',data:b64}});}
   }
-  const res=await fetch('https://api.anthropic.com/v1/messages',{
+  const res=await fetch('/api/analyze',{
     method:'POST',
-    headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01'},
+    headers:{'Content-Type':'application/json'},
     body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:8000,system:SYS,messages:[{role:'user',content}]})
   });
   if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error('API '+res.status+': '+(e.error?.message||'lỗi'));}
