@@ -169,23 +169,23 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14
   <!-- LEFT -->
   <div class="left">
     <div class="sec">
-      <div class="lbl"><span class="lbl-num">1</span> Thêm ngân hàng</div>
-      <input class="inp" id="bnkInp" placeholder="Tên ngân hàng (VD: Vietcombank HCM)" onkeydown="if(event.key==='Enter')addBank()" />
+      <div class="lbl"><span class="lbl-num">1</span> Thêm ngân hàng <span style="font-weight:400;color:var(--text3);text-transform:none;letter-spacing:0">/ Add Bank</span></div>
+      <input class="inp" id="bnkInp" placeholder="Tên ngân hàng / Bank name (VD: Vietcombank HCM)" onkeydown="if(event.key==='Enter')addBank()" />
       <div class="drop" id="dropZone">
         <input type="file" id="fileInp" multiple accept=".pdf,.jpg,.jpeg,.png,.webp" onchange="handleFiles(this.files)" />
         <div class="drop-icon">📎</div>
-        <div class="drop-t">Kéo thả hoặc click để chọn file</div>
+        <div class="drop-t">Kéo thả hoặc click / Drop or click to select</div>
         <div class="drop-s">PDF · JPG · PNG · tối đa 4 file / ngân hàng</div>
       </div>
       <div class="flist" id="flist"></div>
-      <button class="btn-primary" id="addBtn" disabled onclick="addBank()">+ Thêm vào hàng chờ</button>
+      <button class="btn-primary" id="addBtn" disabled onclick="addBank()">+ Thêm vào hàng chờ / Add to Queue</button>
     </div>
     <div class="sec" style="padding-bottom:12px">
-      <div class="lbl"><span class="lbl-num">2</span> Hàng chờ xử lý</div>
-      <button class="btn-primary btn-sec" id="runBtn" disabled onclick="runAll()" style="margin-top:0">▶ Phân tích tất cả</button>
+      <div class="lbl"><span class="lbl-num">2</span> Hàng chờ <span style="font-weight:400;color:var(--text3);text-transform:none;letter-spacing:0">/ Queue</span></div>
+      <button class="btn-primary btn-sec" id="runBtn" disabled onclick="runAll()" style="margin-top:0">▶ Phân tích tất cả / Analyze All</button>
     </div>
     <div class="qlist" id="qlist">
-      <div style="text-align:center;padding:24px 0;color:var(--text3);font-size:12px">Chưa có ngân hàng nào</div>
+      <div style="text-align:center;padding:24px 0;color:var(--text3);font-size:12px">Chưa có ngân hàng nào / No banks added</div>
     </div>
   </div>
 
@@ -193,41 +193,41 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14
   <div class="right" id="rightPanel">
     <div class="empty">
       <div class="empty-icon">📋</div>
-      <div style="font-size:13px;font-weight:500;color:var(--text2)">Chọn một ngân hàng để xem kết quả</div>
-      <div style="font-size:12px;color:var(--text3)">Hoặc thêm file và nhấn Phân tích</div>
+      <div style="font-size:13px;font-weight:500;color:var(--text2)">Chọn ngân hàng để xem kết quả / Select a bank to view results</div>
+      <div style="font-size:12px;color:var(--text3)">Hoặc thêm file và nhấn Phân tích / Add files and click Analyze</div>
     </div>
   </div>
 </div>
 
 <script>
 const SCHEMA=[
-  {g:"A — Định danh hợp đồng",fields:[
+  {g:"A — Định danh hợp đồng / Contract Identity",fields:[
     {k:"bank_name",l:"Tên ngân hàng"},{k:"contract_no",l:"Số hợp đồng"},
     {k:"sign_date",l:"Ngày ký"},{k:"effective_date",l:"Ngày hiệu lực"},
     {k:"expiry_date",l:"Ngày hết hạn tín dụng",flag:1}
   ]},
-  {g:"B — Hạn mức tín dụng",fields:[
+  {g:"B — Hạn mức tín dụng / Credit Limits",fields:[
     {k:"total_limit",l:"Tổng hạn mức phê duyệt"},{k:"loan_limit",l:"↳ Hạn mức vay",sub:1},
     {k:"bl_thuc_hien",l:"↳ BL thực hiện HĐ",sub:1},{k:"bl_thanh_toan",l:"↳ BL thanh toán",sub:1},
     {k:"bl_ung_truoc",l:"↳ BL tiền ứng trước",sub:1},{k:"bl_khac",l:"↳ BL khác",sub:1},
     {k:"max_tenor",l:"Thời hạn vay tối đa"},{k:"currency",l:"Loại tiền tệ"}
   ]},
-  {g:"C — Lãi suất & phí",fields:[
+  {g:"C — Lãi suất & phí / Interest Rates & Fees",fields:[
     {k:"base_rate",l:"Lãi suất cơ sở"},{k:"spread",l:"Biên độ (spread)"},
-    {k:"eff_rate",l:"Lãi suất hiện tại (ước)",calc:1},{k:"rate_adjust",l:"Kỳ điều chỉnh lãi"},
+    {k:"eff_rate",l:"Lãi suất hiện tại (ước tính) / Current rate (est.)",calc:1},{k:"rate_adjust",l:"Kỳ điều chỉnh lãi"},
     {k:"overdue_rate",l:"Lãi suất quá hạn",flag:1},{k:"commit_fee",l:"Phí cam kết"},
     {k:"guarantee_fee",l:"Phí bảo lãnh"},{k:"prepay_fee",l:"Phí trả nợ trước hạn",flag:1},
     {k:"arrange_fee",l:"Phí thu xếp / thẩm định"}
   ]},
-  {g:"D — Lịch trả gốc & lãi",fields:[
+  {g:"D — Lịch trả gốc & lãi / Repayment Schedule",fields:[
     {k:"principal_method",l:"Phương thức trả gốc"},{k:"interest_method",l:"Phương thức trả lãi"},
     {k:"interest_date",l:"Ngày trả lãi định kỳ",flag:1}
   ]},
-  {g:"E — Điều kiện giải ngân / Covenant",fields:[
+  {g:"E — Điều kiện giải ngân / Disbursement Conditions & Covenants",fields:[
     {k:"disbursement_cond",l:"Điều kiện giải ngân",flag:1},
     {k:"financial_cov",l:"Covenant tài chính",flag:1},{k:"special_clause",l:"Điều khoản đặc biệt",flag:1}
   ]},
-  {g:"F — TSBĐ phần VAY",fields:[
+  {g:"F — TSBĐ phần VAY / Collateral (Loan)",fields:[
     {k:"col_total_value",l:"Tổng giá trị TSBĐ"},{k:"col_min_ratio",l:"Tỷ lệ TSBĐ tối thiểu",flag:1},
     {k:"col_ltv",l:"Tỷ lệ tài trợ (LTV)",calc:1},
     {k:"col_cash",l:"↳ Tiền ký quỹ / tiền mặt",sub:1},{k:"col_cash_ratio",l:"   Hệ số quy đổi TM",sub:1},
@@ -236,7 +236,7 @@ const SCHEMA=[
     {k:"col_asset_mix",l:"Tỷ trọng từng loại TSBĐ",calc:1},{k:"col_converted",l:"Tổng TSBĐ quy đổi",calc:1},
     {k:"col_headroom",l:"Headroom TSBĐ",calc:1}
   ]},
-  {g:"G — TSBĐ phần BẢO LÃNH",fields:[
+  {g:"G — TSBĐ phần BẢO LÃNH / Collateral (Guarantee)",fields:[
     {k:"bl_total_limit",l:"Tổng HM BL cần bảo đảm"},{k:"bl_collateral",l:"TSBĐ cho bảo lãnh"},
     {k:"bl_margin_ratio",l:"Tỷ lệ ký quỹ BL",flag:1},{k:"bl_shared_col",l:"TSBĐ chung hay tách riêng"}
   ]}
@@ -244,9 +244,25 @@ const SCHEMA=[
 const ALL_FIELDS=SCHEMA.flatMap(g=>g.fields);
 
 const SYS=`Bạn là chuyên gia phân tích hợp đồng tín dụng ngân hàng Việt Nam, lĩnh vực xây dựng/bất động sản.
-Trích xuất thông tin từ hợp đồng. Quy tắc status: "ok"=có dữ liệu, "missing"=không tìm thấy, "na"=không áp dụng, "flag"=có nhưng cần chú ý, "calc"=trường tính toán.
-Trả về JSON THUẦN TÚY không có markdown, không có text khác:
-{"bank_name":{"value":"","status":"ok","source":""},"contract_no":{"value":"","status":"ok","source":""},"sign_date":{"value":"","status":"ok","source":""},"effective_date":{"value":"","status":"ok","source":""},"expiry_date":{"value":"","status":"ok","source":""},"total_limit":{"value":"","status":"ok","source":""},"loan_limit":{"value":"","status":"ok","source":""},"bl_thuc_hien":{"value":"","status":"ok","source":""},"bl_thanh_toan":{"value":"","status":"ok","source":""},"bl_ung_truoc":{"value":"","status":"ok","source":""},"bl_khac":{"value":"","status":"na","source":""},"max_tenor":{"value":"","status":"ok","source":""},"currency":{"value":"","status":"ok","source":""},"base_rate":{"value":"","status":"ok","source":""},"spread":{"value":"","status":"ok","source":""},"eff_rate":{"value":"","status":"calc","source":"tinh toan"},"rate_adjust":{"value":"","status":"ok","source":""},"overdue_rate":{"value":"","status":"ok","source":""},"commit_fee":{"value":"","status":"ok","source":""},"guarantee_fee":{"value":"","status":"ok","source":""},"prepay_fee":{"value":"","status":"ok","source":""},"arrange_fee":{"value":"","status":"ok","source":""},"principal_method":{"value":"","status":"ok","source":""},"interest_method":{"value":"","status":"ok","source":""},"interest_date":{"value":"","status":"ok","source":""},"disbursement_cond":{"value":"","status":"ok","source":""},"financial_cov":{"value":"","status":"ok","source":""},"special_clause":{"value":"","status":"ok","source":""},"col_total_value":{"value":"","status":"ok","source":""},"col_min_ratio":{"value":"","status":"ok","source":""},"col_ltv":{"value":"","status":"calc","source":"tinh toan"},"col_cash":{"value":"","status":"ok","source":""},"col_cash_ratio":{"value":"","status":"ok","source":""},"col_receivable":{"value":"","status":"ok","source":""},"col_recv_ratio":{"value":"","status":"ok","source":""},"col_realestate":{"value":"","status":"ok","source":""},"col_re_ratio":{"value":"","status":"ok","source":""},"col_asset_mix":{"value":"","status":"calc","source":"tinh toan"},"col_converted":{"value":"","status":"calc","source":"tinh toan"},"col_headroom":{"value":"","status":"calc","source":"tinh toan"},"bl_total_limit":{"value":"","status":"ok","source":""},"bl_collateral":{"value":"","status":"ok","source":""},"bl_margin_ratio":{"value":"","status":"ok","source":""},"bl_shared_col":{"value":"","status":"ok","source":""},"conflicts":[],"flags":[]}`;
+
+Nhiệm vụ: Đọc tài liệu và trích xuất thông tin vào JSON. Mỗi field có format: {"value":"...","status":"...","source":"trang X"}.
+
+Status: ok=có dữ liệu rõ ràng | missing=không tìm thấy | na=không áp dụng | flag=có nhưng cần chú ý (lãi cao, điều khoản bất lợi, covenant chặt) | calc=tự tính từ dữ liệu khác.
+
+Các trường cần extract (theo thứ tự):
+A-Định danh: bank_name, contract_no, sign_date, effective_date, expiry_date(flag)
+B-Hạn mức: total_limit, loan_limit, bl_thuc_hien, bl_thanh_toan, bl_ung_truoc, bl_khac, max_tenor, currency
+C-Lãi suất&phí: base_rate, spread, eff_rate(calc=cơ sở+spread), rate_adjust, overdue_rate(flag), commit_fee, guarantee_fee, prepay_fee(flag), arrange_fee
+D-Lịch trả: principal_method, interest_method, interest_date(flag)
+E-Giải ngân: disbursement_cond(flag), financial_cov(flag), special_clause(flag)
+F-TSBĐ vay: col_total_value, col_min_ratio(flag), col_ltv(calc), col_cash, col_cash_ratio, col_receivable, col_recv_ratio, col_realestate, col_re_ratio, col_asset_mix(calc=% từng loại/tổng HM), col_converted(calc), col_headroom(calc=quy đổi-HM vay)
+G-TSBĐ BL: bl_total_limit, bl_collateral, bl_margin_ratio(flag nếu>=100%), bl_shared_col
+
+Ngoài ra trả về:
+- conflicts: mảng các mâu thuẫn giữa file nếu upload nhiều file, format {field,file_a,value_a,file_b,value_b}
+- flags: mảng string các điểm rủi ro/bất thường cần chú ý
+
+Trả về JSON THUẦN TÚY, không markdown, không text ngoài JSON.`;
 
 let banks=[],activeId=null,curFiles=[];
 
@@ -290,7 +306,7 @@ async function addBank(){
   renderQueue();document.getElementById('runBtn').disabled=false;
 }
 function renderQueue(){
-  if(!banks.length){document.getElementById('qlist').innerHTML='<div style="text-align:center;padding:24px 0;color:var(--text3);font-size:12px">Chưa có ngân hàng nào</div>';return;}
+  if(!banks.length){document.getElementById('qlist').innerHTML='<div style="text-align:center;padding:24px 0;color:var(--text3);font-size:12px">Chưa có ngân hàng nào / No banks added</div>';return;}
   document.getElementById('qlist').innerHTML=banks.map(b=>`
     <div class="qi${b.id===activeId?' active':''}" onclick="selectBank('${b.id}')">
       <div class="dot dot-${b.status}"></div>
@@ -322,7 +338,7 @@ async function callAPI(bank){
   }
   const res=await fetch('/api/analyze',{
     method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:8000,system:SYS,messages:[{role:'user',content}]})
+    body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:8000,system:SYS,messages:[{role:'user',content}]})
   });
   if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error('API '+res.status+': '+(e.error?.message||JSON.stringify(e)));}
   const d=await res.json();
@@ -352,20 +368,20 @@ function renderRight(bank){
   if(bank.status==='processing'){
     el.innerHTML=`<div class="loading">
       <div class="spinner"></div>
-      <div style="font-size:13px;font-weight:500;color:var(--primary)">AI đang đọc hợp đồng...</div>
+      <div style="font-size:13px;font-weight:500;color:var(--primary)">AI đang đọc hợp đồng... / Analyzing document...</div>
       <div style="font-size:12px;color:var(--text3)">${bank.name} · ${bank.files.length} file</div>
     </div>`;return;
   }
   if(bank.status==='error'){
     el.innerHTML=`<div class="loading">
       <div style="font-size:36px">⚠️</div>
-      <div style="color:var(--danger);font-size:13px;font-weight:500">Phân tích thất bại</div>
+      <div style="color:var(--danger);font-size:13px;font-weight:500">Phân tích thất bại / Analysis Failed</div>
       <div style="font-size:11px;color:var(--text3);max-width:360px;text-align:center;line-height:1.5">${bank.result?._err||''}</div>
       <button class="btn-primary btn-sec btn-sm" style="width:auto;margin-top:4px" onclick="reanalyze('${bank.id}')">↺ Thử lại</button>
     </div>`;return;
   }
   if(bank.status!=='done'||!bank.result){
-    el.innerHTML=`<div class="empty"><div class="empty-icon">📋</div><div style="font-size:13px;font-weight:500;color:var(--text2)">Nhấn Phân tích để bắt đầu</div></div>`;return;
+    el.innerHTML=`<div class="empty"><div class="empty-icon">📋</div><div style="font-size:13px;font-weight:500;color:var(--text2)">Nhấn Phân tích để bắt đầu / Click Analyze to start</div></div>`;return;
   }
   const r=bank.result;
   const flags=r.flags||[],conflicts=r.conflicts||[];
@@ -376,12 +392,12 @@ function renderRight(bank){
       <div class="rtbar-name">${bank.name}</div>
       <div class="rtbar-meta">${bank.files.map(f=>f.name).join(' · ')}</div>
     </div>
-    <button class="btn-primary btn-sec btn-sm" style="width:auto;margin:0" onclick="reanalyze('${bank.id}')">↺ Phân tích lại</button>
+    <button class="btn-primary btn-sec btn-sm" style="width:auto;margin:0" onclick="reanalyze('${bank.id}')">↺ Phân tích lại / Re-analyze</button>
   </div>`;
-  conflicts.forEach(c=>{html+=`<div class="conflict">⚠ Mâu thuẫn <b>${c.field}</b>: ${c.file_a} → "${c.value_a}" vs ${c.file_b} → "${c.value_b}"</div>`;});
+  conflicts.forEach(c=>{if(c.field&&c.value_a&&c.value_b){html+=`<div class="conflict">⚠ Mâu thuẫn / Conflict: <b>${c.field}</b> — ${c.file_a||'File A'} → "${c.value_a}" vs ${c.file_b||'File B'} → "${c.value_b}"</div>`;}});
   html+=`<div class="tbl-area">
   <div class="col-hdr" style="border-radius:6px 6px 0 0;margin-bottom:12px">
-    <span>Trường</span><span>Giá trị (click để sửa)</span><span>Trạng thái</span><span>Nguồn tài liệu</span>
+    <span>Trường / Field</span><span>Giá trị / Value (click để sửa)</span><span>Trạng thái / Status</span><span>Nguồn / Source</span>
   </div>`;
   for(const grp of SCHEMA){
     html+=`<div class="grp"><div class="grp-hdr">${grp.g}</div>`;
@@ -399,7 +415,7 @@ function renderRight(bank){
     html+=`</div>`;
   }
   if(flags.length){
-    html+=`<div class="grp"><div class="grp-hdr" style="background:#b91c1c">⚑ Điểm cần lưu ý</div>`;
+    html+=`<div class="grp"><div class="grp-hdr" style="background:#b91c1c">⚑ Điểm cần lưu ý / Key Flags</div>`;
     flags.forEach(f=>{html+=`<div class="flag-row">⚠ ${f}</div>`;});
     html+=`</div>`;
   }
@@ -408,10 +424,10 @@ function renderRight(bank){
     <div class="copy-info">
       <b>${bank.name}</b> &nbsp;·&nbsp;
       <span style="color:var(--warn)">${flags.length} cảnh báo</span> &nbsp;·&nbsp;
-      ${miss} trường thiếu &nbsp;·&nbsp;
-      ${conflicts.length} mâu thuẫn
+      ${miss} trường thiếu / missing &nbsp;·&nbsp;
+      ${conflicts.length} mâu thuẫn / conflicts
     </div>
-    <button class="btn-primary btn-sec btn-sm" style="width:auto;margin:0;color:var(--danger);border-color:var(--danger)" onclick="removeBank('${bank.id}')">Xóa</button>
+    <button class="btn-primary btn-sec btn-sm" style="width:auto;margin:0;color:var(--danger);border-color:var(--danger)" onclick="removeBank('${bank.id}')">Xóa / Remove</button>
     <button class="btn-primary btn-sm" id="cpb-${bank.id}" style="width:auto;margin:0;background:var(--primary)" onclick="copyXL('${bank.id}')">📋 Copy → Excel</button>
   </div></div>`;
   el.innerHTML=html;
@@ -424,7 +440,7 @@ function upd(el){
 function reanalyze(id){const b=banks.find(x=>x.id===id);if(b){b.status='pending';b.result=null;analyzeBank(b);}}
 function removeBank(id){
   banks=banks.filter(x=>x.id!==id);
-  if(activeId===id){activeId=null;document.getElementById('rightPanel').innerHTML=`<div class="empty"><div class="empty-icon">📋</div><div style="font-size:13px;font-weight:500;color:var(--text2)">Chọn một ngân hàng để xem kết quả</div></div>`;}
+  if(activeId===id){activeId=null;document.getElementById('rightPanel').innerHTML=`<div class="empty"><div class="empty-icon">📋</div><div style="font-size:13px;font-weight:500;color:var(--text2)">Chọn ngân hàng để xem kết quả / Select a bank to view results</div></div>`;}
   renderQueue();
 }
 function copyXL(id){
