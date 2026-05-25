@@ -322,7 +322,7 @@ async function callAPI(bank){
   }
   const res=await fetch('/api/analyze',{
     method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:8000,system:SYS,messages:[{role:'user',content}]})
+    body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:8000,system:SYS,messages:[{role:'user',content}]})
   });
   if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error('API '+res.status+': '+(e.error?.message||JSON.stringify(e)));}
   const d=await res.json();
