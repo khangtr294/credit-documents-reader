@@ -120,12 +120,12 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14
 <!-- API KEY MODAL -->
 <div class="modal-bg" id="modalBg">
   <div class="modal">
-    <h2>🔑 Nhập Anthropic API Key</h2>
-    <p>Tool này dùng Claude AI để đọc hợp đồng tín dụng. Bạn cần có API Key từ Anthropic để sử dụng.</p>
-    <input class="modal-inp" id="apiKeyInput" type="password" placeholder="sk-ant-api03-..." />
+    <h2>🔑 Nhập Gemini API Key</h2>
+    <p>Tool này dùng Google Gemini AI để đọc hợp đồng tín dụng. Bạn cần có API Key từ Google AI Studio (miễn phí).</p>
+    <input class="modal-inp" id="apiKeyInput" type="password" placeholder="AIza..." />
     <div class="modal-note">
-      Lấy API key tại: <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a> → API Keys<br>
-      Key được lưu trong trình duyệt, không gửi đến server nào khác ngoài Anthropic.
+      Lấy API key miễn phí tại: <a href="https://aistudio.google.com" target="_blank">aistudio.google.com</a> → Get API Key<br>
+      Key được lưu trong trình duyệt, không gửi đến server nào khác ngoài Google.
     </div>
     <button class="btn-primary" style="margin-top:0" onclick="saveKey()">Xác nhận & bắt đầu</button>
   </div>
@@ -226,11 +226,11 @@ Trả về JSON THUẦN TÚY không có markdown, không có text khác:
 let banks=[], activeId=null, curFiles=[];
 
 // ── API KEY ──────────────────────────────────────────────
-function getKey(){return localStorage.getItem('cdr_apikey')||''}
+function getKey(){return localStorage.getItem('cdr_gemini_key')||''}
 function saveKey(){
   const k=document.getElementById('apiKeyInput').value.trim();
-  if(!k.startsWith('sk-ant')){alert('Key không hợp lệ. Phải bắt đầu bằng sk-ant');return;}
-  localStorage.setItem('cdr_apikey',k);
+  if(!k.startsWith('AIza')){alert('Key không hợp lệ. Phải bắt đầu bằng AIza');return;}
+  localStorage.setItem('cdr_gemini_key',k);
   document.getElementById('modalBg').style.display='none';
 }
 window.onload=()=>{if(getKey())document.getElementById('modalBg').style.display='none';}
@@ -301,22 +301,27 @@ async function analyzeBank(bank){
 async function callAPI(bank){
   const key=getKey();
   if(!key)throw new Error('Chưa có API Key. Tải lại trang để nhập.');
-  const content=[{type:'text',text:`Ngân hàng: ${bank.name}\nPhân tích ${bank.files.length} file:`}];
+  // Build Gemini parts
+  const parts=[{text:`Ngân hàng: ${bank.name}\nPhân tích ${bank.files.length} file sau:`}];
   for(let i=0;i<bank.files.length;i++){
-    const f=bank.files[i];content.push({type:'text',text:`\n[File ${i+1}: ${f.name}]`});
+    const f=bank.files[i];
+    parts.push({text:`\n[File ${i+1}: ${f.name}]`});
     const b64=f.data.split(',')[1];
     const mt=f.type||(f.name.endsWith('.pdf')?'application/pdf':'image/jpeg');
-    if(mt==='application/pdf'){content.push({type:'document',source:{type:'base64',media_type:'application/pdf',data:b64}});}
-    else{content.push({type:'image',source:{type:'base64',media_type:mt.startsWith('image/')?mt:'image/jpeg',data:b64}});}
+    parts.push({inline_data:{mime_type:mt.startsWith('image/')?mt:'image/jpeg',data:b64}});
   }
   const res=await fetch('/api/analyze',{
     method:'POST',
     headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:8000,system:SYS,messages:[{role:'user',content}]})
+    body:JSON.stringify({
+      system:SYS,
+      contents:[{role:'user',parts}]
+    })
   });
-  if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error('API '+res.status+': '+(e.error?.message||'lỗi'));}
+  if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error('API '+res.status+': '+(e.error?.message||JSON.stringify(e)));}
   const d=await res.json();
-  const text=d.content.map(c=>c.text||'').join('');
+  if(d.error)throw new Error('Gemini: '+d.error.message);
+  const text=d.candidates?.[0]?.content?.parts?.map(p=>p.text||'').join('')||'';
   let raw='';
   const fc=text.indexOf('```json');
   if(fc!==-1){const fe=text.indexOf('```',fc+7);raw=fe!==-1?text.slice(fc+7,fe).trim():text.slice(fc+7).trim();}
