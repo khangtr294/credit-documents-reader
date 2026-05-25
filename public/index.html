@@ -3,162 +3,189 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Credit Documents Reader</title>
+<title>Credit Documents Reader — Handong E&C</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
-:root {
-  --bg:#0d0f12; --bg2:#13161b; --bg3:#1a1e25;
-  --border:#252930; --border2:#2e343d;
-  --accent:#00d4aa; --blue:#0099ff; --warn:#f59e0b; --danger:#ef4444; --success:#00d4aa;
-  --text:#e2e8f0; --text2:#8892a4; --text3:#4a5568;
-  --mono:'IBM Plex Mono',monospace; --sans:'IBM Plex Sans',sans-serif;
+:root{
+  --primary:#1a3a6b;
+  --primary-dark:#122a52;
+  --primary-light:#e8edf5;
+  --accent:#2563eb;
+  --accent-light:#dbeafe;
+  --bg:#f4f6fa;
+  --bg2:#ffffff;
+  --bg3:#f0f3f8;
+  --border:#d1d9e6;
+  --border2:#b8c5d9;
+  --text:#1e293b;
+  --text2:#475569;
+  --text3:#94a3b8;
+  --warn:#d97706;
+  --warn-bg:#fffbeb;
+  --danger:#dc2626;
+  --danger-bg:#fef2f2;
+  --success:#059669;
+  --success-bg:#ecfdf5;
+  --info:#2563eb;
+  --info-bg:#eff6ff;
+  --mono:'IBM Plex Mono',monospace;
+  --sans:'IBM Plex Sans',sans-serif;
+  --shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.05);
+  --shadow-md:0 4px 6px rgba(0,0,0,.07),0 2px 4px rgba(0,0,0,.05);
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;min-height:100vh}
+
 /* HEADER */
-.hdr{border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;gap:12px;background:var(--bg2);position:sticky;top:0;z-index:10}
-.hdr-logo{font-family:var(--mono);font-size:14px;color:var(--accent);font-weight:500;letter-spacing:.05em}
-.hdr-sep{color:var(--text3)}
-.hdr-title{font-size:13px;color:var(--text2)}
-.hdr-badge{margin-left:auto;font-family:var(--mono);font-size:10px;padding:3px 9px;border:1px solid var(--accent);color:var(--accent);border-radius:3px;letter-spacing:.08em}
+.hdr{background:var(--primary);padding:0 24px;display:flex;align-items:center;gap:0;position:sticky;top:0;z-index:10;box-shadow:0 2px 8px rgba(0,0,0,.15);height:56px}
+.hdr-logo-wrap{display:flex;align-items:center;gap:12px;padding-right:20px;border-right:1px solid rgba(255,255,255,.2)}
+.hdr-logo-icon{width:36px;height:36px;background:#fff;border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;color:var(--primary);letter-spacing:-.5px;flex-shrink:0}
+.hdr-logo-text{display:flex;flex-direction:column;line-height:1.2}
+.hdr-logo-name{font-size:13px;font-weight:600;color:#fff;letter-spacing:.02em}
+.hdr-logo-sub{font-size:9px;color:rgba(255,255,255,.6);letter-spacing:.08em;text-transform:uppercase}
+.hdr-divider{flex-shrink:0}
+.hdr-app{padding-left:20px;display:flex;flex-direction:column;line-height:1.2}
+.hdr-app-name{font-size:14px;font-weight:600;color:#fff}
+.hdr-app-sub{font-size:10px;color:rgba(255,255,255,.55);letter-spacing:.05em}
+.hdr-badge{margin-left:auto;font-family:var(--mono);font-size:10px;padding:4px 10px;border:1px solid rgba(255,255,255,.3);color:rgba(255,255,255,.85);border-radius:20px;letter-spacing:.08em;background:rgba(255,255,255,.1)}
+
 /* LAYOUT */
-.layout{display:grid;grid-template-columns:300px 1fr;height:calc(100vh - 53px)}
-/* LEFT */
+.layout{display:grid;grid-template-columns:290px 1fr;height:calc(100vh - 56px)}
+
+/* LEFT PANEL */
 .left{border-right:1px solid var(--border);display:flex;flex-direction:column;background:var(--bg2);overflow:hidden}
 .sec{padding:14px;border-bottom:1px solid var(--border)}
-.lbl{font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--text3);text-transform:uppercase;margin-bottom:10px}
-.inp{width:100%;background:var(--bg3);border:1px solid var(--border2);color:var(--text);font-family:var(--sans);font-size:13px;padding:8px 10px;border-radius:4px;outline:none;transition:border-color .15s}
-.inp:focus{border-color:var(--blue)}
+.lbl{font-size:10px;font-weight:600;letter-spacing:.1em;color:var(--primary);text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.lbl-num{width:18px;height:18px;background:var(--primary);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0}
+.inp{width:100%;background:var(--bg3);border:1.5px solid var(--border);color:var(--text);font-family:var(--sans);font-size:13px;padding:8px 11px;border-radius:6px;outline:none;transition:border-color .15s,box-shadow .15s}
+.inp:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(37,99,235,.1)}
 .inp::placeholder{color:var(--text3)}
-.drop{margin-top:10px;border:1px dashed var(--border2);border-radius:6px;padding:18px 12px;text-align:center;cursor:pointer;transition:all .15s;background:var(--bg3);position:relative}
-.drop:hover,.drop.over{border-color:var(--accent);background:rgba(0,212,170,.04)}
+.drop{margin-top:10px;border:1.5px dashed var(--border2);border-radius:8px;padding:16px 12px;text-align:center;cursor:pointer;transition:all .15s;background:var(--bg3);position:relative}
+.drop:hover,.drop.over{border-color:var(--accent);background:var(--info-bg)}
 .drop input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
-.drop-icon{font-size:22px;opacity:.4;margin-bottom:6px}
-.drop-t{font-size:12px;color:var(--text2)}
+.drop-icon{font-size:24px;margin-bottom:6px;opacity:.5}
+.drop-t{font-size:12px;color:var(--text2);font-weight:500}
 .drop-s{font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:3px}
 .flist{display:flex;flex-direction:column;gap:5px;margin-top:8px}
-.fi{display:flex;align-items:center;gap:7px;padding:5px 8px;background:var(--bg3);border:1px solid var(--border);border-radius:4px}
-.fi-name{flex:1;font-family:var(--mono);font-size:10px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fi{display:flex;align-items:center;gap:7px;padding:6px 9px;background:var(--info-bg);border:1px solid #bfdbfe;border-radius:5px}
+.fi-name{flex:1;font-family:var(--mono);font-size:10px;color:var(--accent);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .fi-rm{background:none;border:none;color:var(--text3);cursor:pointer;font-size:16px;line-height:1;padding:0;transition:color .1s}
 .fi-rm:hover{color:var(--danger)}
-.btn-primary{width:100%;padding:9px;background:var(--accent);color:#000;font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.07em;border:none;border-radius:4px;cursor:pointer;text-transform:uppercase;margin-top:10px;transition:background .15s}
-.btn-primary:hover:not(:disabled){background:#00eabc}
-.btn-primary:disabled{opacity:.35;cursor:not-allowed}
-.btn-sec{background:transparent;color:var(--text2);border:1px solid var(--border2);transition:all .15s}
-.btn-sec:hover:not(:disabled){border-color:var(--text2);color:var(--text)}
+.btn-primary{width:100%;padding:9px;background:var(--primary);color:#fff;font-family:var(--sans);font-size:12px;font-weight:600;letter-spacing:.04em;border:none;border-radius:6px;cursor:pointer;margin-top:10px;transition:background .15s;box-shadow:var(--shadow)}
+.btn-primary:hover:not(:disabled){background:var(--primary-dark)}
+.btn-primary:disabled{opacity:.4;cursor:not-allowed;box-shadow:none}
+.btn-sec{background:#fff;color:var(--text2);border:1.5px solid var(--border);box-shadow:none}
+.btn-sec:hover:not(:disabled){background:var(--bg3);border-color:var(--border2);color:var(--text)}
+
 /* QUEUE */
 .qlist{flex:1;overflow-y:auto;padding:10px}
-.qi{display:flex;align-items:center;gap:8px;padding:9px 11px;border-radius:5px;cursor:pointer;border:1px solid transparent;margin-bottom:4px;transition:all .12s}
+.qi{display:flex;align-items:center;gap:8px;padding:9px 11px;border-radius:7px;cursor:pointer;border:1.5px solid transparent;margin-bottom:4px;transition:all .12s;background:transparent}
 .qi:hover{background:var(--bg3)}
-.qi.active{background:var(--bg3);border-color:var(--blue)}
-.qi-name{flex:1;font-size:13px;font-weight:500}
+.qi.active{background:var(--primary-light);border-color:var(--accent)}
+.qi-name{flex:1;font-size:13px;font-weight:500;color:var(--text)}
 .qi-c{font-family:var(--mono);font-size:10px;color:var(--text3)}
-.dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
 .dot-pending{background:var(--text3)}
 .dot-processing{background:var(--warn);animation:pulse 1s infinite}
-.dot-done{background:var(--accent)}
+.dot-done{background:var(--success)}
 .dot-error{background:var(--danger)}
-/* RIGHT */
-.right{display:flex;flex-direction:column;overflow:hidden}
+
+/* RIGHT PANEL */
+.right{display:flex;flex-direction:column;overflow:hidden;background:var(--bg)}
 .empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--text3)}
-.empty-icon{font-size:38px;opacity:.25}
+.empty-icon{font-size:40px;opacity:.3}
+
 /* RESULT */
-.rtbar{display:flex;align-items:center;gap:10px;padding:10px 20px;border-bottom:1px solid var(--border);background:var(--bg2);flex-shrink:0}
-.rtbar-name{font-size:14px;font-weight:600;flex:1}
+.rtbar{display:flex;align-items:center;gap:10px;padding:11px 20px;border-bottom:1px solid var(--border);background:var(--bg2);flex-shrink:0;box-shadow:var(--shadow)}
+.rtbar-name{font-size:14px;font-weight:600;color:var(--primary);flex:1}
 .rtbar-meta{font-family:var(--mono);font-size:10px;color:var(--text3)}
-.btn-sm{padding:6px 12px;font-family:var(--mono);font-size:10px;border-radius:4px;cursor:pointer;transition:all .15s;letter-spacing:.04em}
+.btn-sm{padding:6px 12px;font-family:var(--sans);font-size:11px;font-weight:500;border-radius:5px;cursor:pointer;transition:all .15s}
 .tbl-area{flex:1;overflow-y:auto;padding:16px 20px}
-.grp{margin-bottom:20px}
-.grp-hdr{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--blue);padding:5px 0;border-bottom:1px solid rgba(0,153,255,.25);margin-bottom:2px}
-.col-hdr{display:grid;grid-template-columns:200px 1fr 88px 150px;padding:4px 0 6px;border-bottom:1px solid var(--border2)}
-.col-hdr span{font-family:var(--mono);font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;padding:0 8px}
-.row{display:grid;grid-template-columns:200px 1fr 88px 150px;border-bottom:1px solid var(--border);min-height:34px;align-items:stretch}
-.row:hover{background:rgba(255,255,255,.015)}
-.cell{padding:6px 8px;font-size:12px;display:flex;align-items:center;border-right:1px solid var(--border)}
+.grp{margin-bottom:20px;border-radius:8px;overflow:hidden;box-shadow:var(--shadow);background:var(--bg2)}
+.grp-hdr{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#fff;padding:8px 14px;background:var(--primary)}
+.col-hdr{display:grid;grid-template-columns:200px 1fr 90px 150px;padding:6px 0;border-bottom:1.5px solid var(--border2);background:var(--bg3)}
+.col-hdr span{font-size:10px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.07em;padding:0 10px}
+.row{display:grid;grid-template-columns:200px 1fr 90px 150px;border-bottom:1px solid var(--border);min-height:34px;align-items:stretch}
+.row:hover{background:var(--primary-light)}
+.cell{padding:6px 10px;font-size:12px;display:flex;align-items:center;border-right:1px solid var(--border)}
 .cell:last-child{border-right:none}
-.c-field{color:var(--text2);font-weight:500;font-size:12px}
-.c-field.sub{padding-left:20px;color:var(--text3);font-size:11px}
-.c-val{font-family:var(--mono);font-size:11px;color:var(--text);outline:none;padding:3px 5px;border-radius:3px;flex:1;word-break:break-word;white-space:pre-wrap;line-height:1.5;transition:background .1s}
-.c-val:hover{background:var(--bg3)}
-.c-val:focus{background:var(--bg3);box-shadow:0 0 0 1px var(--blue)}
+.c-field{color:var(--text2);font-weight:500}
+.c-field.sub{padding-left:22px;color:var(--text3);font-size:11px}
+.c-val{font-family:var(--mono);font-size:11px;color:var(--text);outline:none;padding:3px 5px;border-radius:4px;flex:1;word-break:break-word;white-space:pre-wrap;line-height:1.5;transition:all .1s;border:1px solid transparent}
+.c-val:hover{background:var(--bg3);border-color:var(--border)}
+.c-val:focus{background:#fff;border-color:var(--accent);box-shadow:0 0 0 2px rgba(37,99,235,.1)}
 .c-src{font-family:var(--mono);font-size:10px;color:var(--text3);word-break:break-all}
+
 /* BADGE */
-.badge{font-family:var(--mono);font-size:10px;padding:2px 7px;border-radius:3px;font-weight:500;white-space:nowrap;border:1px solid}
-.b-ok{background:rgba(0,212,170,.1);color:var(--accent);border-color:rgba(0,212,170,.3)}
-.b-miss{background:rgba(245,158,11,.1);color:var(--warn);border-color:rgba(245,158,11,.3)}
-.b-na{background:rgba(74,85,104,.2);color:var(--text3);border-color:var(--border2)}
-.b-flag{background:rgba(239,68,68,.1);color:var(--danger);border-color:rgba(239,68,68,.3)}
-.b-calc{background:rgba(0,153,255,.1);color:var(--blue);border-color:rgba(0,153,255,.3)}
+.badge{font-family:var(--mono);font-size:10px;padding:2px 8px;border-radius:20px;font-weight:600;white-space:nowrap;border:1px solid}
+.b-ok{background:var(--success-bg);color:var(--success);border-color:#a7f3d0}
+.b-miss{background:var(--warn-bg);color:var(--warn);border-color:#fde68a}
+.b-na{background:var(--bg3);color:var(--text3);border-color:var(--border)}
+.b-flag{background:var(--danger-bg);color:var(--danger);border-color:#fecaca}
+.b-calc{background:var(--info-bg);color:var(--info);border-color:#bfdbfe}
+
 /* COPY BAR */
-.copybar{padding:10px 20px;border-top:1px solid var(--border);display:flex;align-items:center;gap:10px;background:var(--bg2);flex-shrink:0}
-.copy-info{flex:1;font-family:var(--mono);font-size:11px;color:var(--text3)}
+.copybar{padding:10px 20px;border-top:1px solid var(--border);display:flex;align-items:center;gap:10px;background:var(--bg2);flex-shrink:0;box-shadow:0 -1px 3px rgba(0,0,0,.05)}
+.copy-info{flex:1;font-size:12px;color:var(--text2)}
+
 /* CONFLICT */
-.conflict{margin:8px 20px 0;padding:9px 12px;background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.3);border-radius:5px;font-size:12px;color:var(--warn)}
+.conflict{margin:8px 20px 0;padding:9px 12px;background:var(--warn-bg);border:1px solid #fde68a;border-radius:6px;font-size:12px;color:var(--warn)}
+
 /* LOADING */
-.loading{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px}
-.spinner{width:26px;height:26px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite}
-/* API KEY MODAL */
-.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:100}
-.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:28px;width:440px;max-width:90vw}
-.modal h2{font-size:15px;font-weight:600;margin-bottom:6px}
-.modal p{font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:16px}
-.modal a{color:var(--accent)}
-.modal-inp{width:100%;background:var(--bg3);border:1px solid var(--border2);color:var(--text);font-family:var(--mono);font-size:12px;padding:9px 12px;border-radius:4px;outline:none;margin-bottom:12px;letter-spacing:.05em}
-.modal-inp:focus{border-color:var(--blue)}
-.modal-note{font-size:11px;color:var(--text3);font-family:var(--mono);margin-bottom:16px;padding:8px 10px;background:var(--bg3);border-radius:4px;line-height:1.5}
+.loading{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:var(--bg)}
+.spinner{width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .7s linear infinite}
+
 /* FLAG ROW */
-.flag-row{padding:7px 10px;border-bottom:1px solid var(--border);font-size:12px;color:var(--warn)}
+.flag-row{padding:8px 12px;border-bottom:1px solid var(--border);font-size:12px;color:var(--warn);background:var(--warn-bg)}
+
 /* SCROLLBAR */
 ::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:var(--bg3)}
 ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--text3)}
+
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 </style>
 </head>
 <body>
 
-<!-- API KEY MODAL -->
-<div class="modal-bg" id="modalBg">
-  <div class="modal">
-    <h2>🔑 Nhập Gemini API Key</h2>
-    <p>Tool này dùng Google Gemini AI để đọc hợp đồng tín dụng. Bạn cần có API Key từ Google AI Studio (miễn phí).</p>
-    <input class="modal-inp" id="apiKeyInput" type="password" placeholder="AIza..." />
-    <div class="modal-note">
-      Lấy API key miễn phí tại: <a href="https://aistudio.google.com" target="_blank">aistudio.google.com</a> → Get API Key<br>
-      Key được lưu trong trình duyệt, không gửi đến server nào khác ngoài Google.
-    </div>
-    <button class="btn-primary" style="margin-top:0" onclick="saveKey()">Xác nhận & bắt đầu</button>
-  </div>
-</div>
-
 <div class="hdr">
-  <span class="hdr-logo">CDR</span>
-  <span class="hdr-sep">·</span>
-  <span class="hdr-title">Credit Documents Reader</span>
-  <span class="hdr-badge">AI-POWERED</span>
+  <div class="hdr-logo-wrap">
+    <div class="hdr-logo-icon">H</div>
+    <div class="hdr-logo-text">
+      <span class="hdr-logo-name">HANDONG</span>
+      <span class="hdr-logo-sub">Engineering &amp; Construction</span>
+    </div>
+  </div>
+  <div class="hdr-app">
+    <span class="hdr-app-name">Credit Documents Reader</span>
+    <span class="hdr-app-sub">AI-Powered · Finance Department</span>
+  </div>
+  <span class="hdr-badge">CLAUDE AI</span>
 </div>
 
 <div class="layout">
   <!-- LEFT -->
   <div class="left">
     <div class="sec">
-      <div class="lbl">01 — Thêm ngân hàng</div>
+      <div class="lbl"><span class="lbl-num">1</span> Thêm ngân hàng</div>
       <input class="inp" id="bnkInp" placeholder="Tên ngân hàng (VD: Vietcombank HCM)" onkeydown="if(event.key==='Enter')addBank()" />
       <div class="drop" id="dropZone">
         <input type="file" id="fileInp" multiple accept=".pdf,.jpg,.jpeg,.png,.webp" onchange="handleFiles(this.files)" />
         <div class="drop-icon">📎</div>
-        <div class="drop-t">Kéo thả hoặc click để chọn</div>
-        <div class="drop-s">PDF · JPG · PNG · tối đa 4 file</div>
+        <div class="drop-t">Kéo thả hoặc click để chọn file</div>
+        <div class="drop-s">PDF · JPG · PNG · tối đa 4 file / ngân hàng</div>
       </div>
       <div class="flist" id="flist"></div>
       <button class="btn-primary" id="addBtn" disabled onclick="addBank()">+ Thêm vào hàng chờ</button>
     </div>
     <div class="sec" style="padding-bottom:12px">
-      <div class="lbl">02 — Hàng chờ xử lý</div>
+      <div class="lbl"><span class="lbl-num">2</span> Hàng chờ xử lý</div>
       <button class="btn-primary btn-sec" id="runBtn" disabled onclick="runAll()" style="margin-top:0">▶ Phân tích tất cả</button>
     </div>
     <div class="qlist" id="qlist">
-      <div style="text-align:center;padding:20px 0;color:var(--text3);font-size:12px">Chưa có ngân hàng nào</div>
+      <div style="text-align:center;padding:24px 0;color:var(--text3);font-size:12px">Chưa có ngân hàng nào</div>
     </div>
   </div>
 
@@ -166,14 +193,13 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14
   <div class="right" id="rightPanel">
     <div class="empty">
       <div class="empty-icon">📋</div>
-      <div style="font-size:13px">Chọn một ngân hàng để xem kết quả</div>
-      <div style="font-family:var(--mono);font-size:11px;opacity:.6">Hoặc thêm file và nhấn Phân tích</div>
+      <div style="font-size:13px;font-weight:500;color:var(--text2)">Chọn một ngân hàng để xem kết quả</div>
+      <div style="font-size:12px;color:var(--text3)">Hoặc thêm file và nhấn Phân tích</div>
     </div>
   </div>
 </div>
 
 <script>
-// ── SCHEMA ──────────────────────────────────────────────
 const SCHEMA=[
   {g:"A — Định danh hợp đồng",fields:[
     {k:"bank_name",l:"Tên ngân hàng"},{k:"contract_no",l:"Số hợp đồng"},
@@ -218,24 +244,12 @@ const SCHEMA=[
 const ALL_FIELDS=SCHEMA.flatMap(g=>g.fields);
 
 const SYS=`Bạn là chuyên gia phân tích hợp đồng tín dụng ngân hàng Việt Nam, lĩnh vực xây dựng/bất động sản.
-Trích xuất thông tin từ hợp đồng. Quy tắc status: "ok"=có dữ liệu, "missing"=không tìm thấy, "na"=không áp dụng, "flag"=có nhưng cần chú ý (lãi cao/điều khoản bất lợi), "calc"=trường tính toán.
+Trích xuất thông tin từ hợp đồng. Quy tắc status: "ok"=có dữ liệu, "missing"=không tìm thấy, "na"=không áp dụng, "flag"=có nhưng cần chú ý, "calc"=trường tính toán.
 Trả về JSON THUẦN TÚY không có markdown, không có text khác:
-{"bank_name":{"value":"","status":"ok","source":""},"contract_no":{"value":"","status":"ok","source":""},"sign_date":{"value":"","status":"ok","source":""},"effective_date":{"value":"","status":"ok","source":""},"expiry_date":{"value":"","status":"ok","source":""},"total_limit":{"value":"","status":"ok","source":""},"loan_limit":{"value":"","status":"ok","source":""},"bl_thuc_hien":{"value":"","status":"ok","source":""},"bl_thanh_toan":{"value":"","status":"ok","source":""},"bl_ung_truoc":{"value":"","status":"ok","source":""},"bl_khac":{"value":"","status":"na","source":""},"max_tenor":{"value":"","status":"ok","source":""},"currency":{"value":"","status":"ok","source":""},"base_rate":{"value":"","status":"ok","source":""},"spread":{"value":"","status":"ok","source":""},"eff_rate":{"value":"","status":"calc","source":"tính toán"},"rate_adjust":{"value":"","status":"ok","source":""},"overdue_rate":{"value":"","status":"ok","source":""},"commit_fee":{"value":"","status":"ok","source":""},"guarantee_fee":{"value":"","status":"ok","source":""},"prepay_fee":{"value":"","status":"ok","source":""},"arrange_fee":{"value":"","status":"ok","source":""},"principal_method":{"value":"","status":"ok","source":""},"interest_method":{"value":"","status":"ok","source":""},"interest_date":{"value":"","status":"ok","source":""},"disbursement_cond":{"value":"","status":"ok","source":""},"financial_cov":{"value":"","status":"ok","source":""},"special_clause":{"value":"","status":"ok","source":""},"col_total_value":{"value":"","status":"ok","source":""},"col_min_ratio":{"value":"","status":"ok","source":""},"col_ltv":{"value":"","status":"calc","source":"tính toán"},"col_cash":{"value":"","status":"ok","source":""},"col_cash_ratio":{"value":"","status":"ok","source":""},"col_receivable":{"value":"","status":"ok","source":""},"col_recv_ratio":{"value":"","status":"ok","source":""},"col_realestate":{"value":"","status":"ok","source":""},"col_re_ratio":{"value":"","status":"ok","source":""},"col_asset_mix":{"value":"","status":"calc","source":"tính toán"},"col_converted":{"value":"","status":"calc","source":"tính toán"},"col_headroom":{"value":"","status":"calc","source":"tính toán"},"bl_total_limit":{"value":"","status":"ok","source":""},"bl_collateral":{"value":"","status":"ok","source":""},"bl_margin_ratio":{"value":"","status":"ok","source":""},"bl_shared_col":{"value":"","status":"ok","source":""},"conflicts":[],"flags":[]}`;
+{"bank_name":{"value":"","status":"ok","source":""},"contract_no":{"value":"","status":"ok","source":""},"sign_date":{"value":"","status":"ok","source":""},"effective_date":{"value":"","status":"ok","source":""},"expiry_date":{"value":"","status":"ok","source":""},"total_limit":{"value":"","status":"ok","source":""},"loan_limit":{"value":"","status":"ok","source":""},"bl_thuc_hien":{"value":"","status":"ok","source":""},"bl_thanh_toan":{"value":"","status":"ok","source":""},"bl_ung_truoc":{"value":"","status":"ok","source":""},"bl_khac":{"value":"","status":"na","source":""},"max_tenor":{"value":"","status":"ok","source":""},"currency":{"value":"","status":"ok","source":""},"base_rate":{"value":"","status":"ok","source":""},"spread":{"value":"","status":"ok","source":""},"eff_rate":{"value":"","status":"calc","source":"tinh toan"},"rate_adjust":{"value":"","status":"ok","source":""},"overdue_rate":{"value":"","status":"ok","source":""},"commit_fee":{"value":"","status":"ok","source":""},"guarantee_fee":{"value":"","status":"ok","source":""},"prepay_fee":{"value":"","status":"ok","source":""},"arrange_fee":{"value":"","status":"ok","source":""},"principal_method":{"value":"","status":"ok","source":""},"interest_method":{"value":"","status":"ok","source":""},"interest_date":{"value":"","status":"ok","source":""},"disbursement_cond":{"value":"","status":"ok","source":""},"financial_cov":{"value":"","status":"ok","source":""},"special_clause":{"value":"","status":"ok","source":""},"col_total_value":{"value":"","status":"ok","source":""},"col_min_ratio":{"value":"","status":"ok","source":""},"col_ltv":{"value":"","status":"calc","source":"tinh toan"},"col_cash":{"value":"","status":"ok","source":""},"col_cash_ratio":{"value":"","status":"ok","source":""},"col_receivable":{"value":"","status":"ok","source":""},"col_recv_ratio":{"value":"","status":"ok","source":""},"col_realestate":{"value":"","status":"ok","source":""},"col_re_ratio":{"value":"","status":"ok","source":""},"col_asset_mix":{"value":"","status":"calc","source":"tinh toan"},"col_converted":{"value":"","status":"calc","source":"tinh toan"},"col_headroom":{"value":"","status":"calc","source":"tinh toan"},"bl_total_limit":{"value":"","status":"ok","source":""},"bl_collateral":{"value":"","status":"ok","source":""},"bl_margin_ratio":{"value":"","status":"ok","source":""},"bl_shared_col":{"value":"","status":"ok","source":""},"conflicts":[],"flags":[]}`;
 
-// ── STATE ────────────────────────────────────────────────
-let banks=[], activeId=null, curFiles=[];
+let banks=[],activeId=null,curFiles=[];
 
-// ── API KEY ──────────────────────────────────────────────
-function getKey(){return localStorage.getItem('cdr_gemini_key')||''}
-function saveKey(){
-  const k=document.getElementById('apiKeyInput').value.trim();
-  if(!k.startsWith('AIza')){alert('Key không hợp lệ. Phải bắt đầu bằng AIza');return;}
-  localStorage.setItem('cdr_gemini_key',k);
-  document.getElementById('modalBg').style.display='none';
-}
-window.onload=()=>{if(getKey())document.getElementById('modalBg').style.display='none';}
-
-// ── FILE HANDLING ────────────────────────────────────────
 const dz=document.getElementById('dropZone');
 dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('over')});
 dz.addEventListener('dragleave',()=>dz.classList.remove('over'));
@@ -264,7 +278,6 @@ function updateAddBtn(){
 }
 document.getElementById('bnkInp').oninput=updateAddBtn;
 
-// ── QUEUE ────────────────────────────────────────────────
 async function addBank(){
   const name=document.getElementById('bnkInp').value.trim();
   if(!name||!curFiles.length)return;
@@ -277,7 +290,7 @@ async function addBank(){
   renderQueue();document.getElementById('runBtn').disabled=false;
 }
 function renderQueue(){
-  if(!banks.length){document.getElementById('qlist').innerHTML='<div style="text-align:center;padding:20px 0;color:var(--text3);font-size:12px">Chưa có ngân hàng nào</div>';return;}
+  if(!banks.length){document.getElementById('qlist').innerHTML='<div style="text-align:center;padding:24px 0;color:var(--text3);font-size:12px">Chưa có ngân hàng nào</div>';return;}
   document.getElementById('qlist').innerHTML=banks.map(b=>`
     <div class="qi${b.id===activeId?' active':''}" onclick="selectBank('${b.id}')">
       <div class="dot dot-${b.status}"></div>
@@ -297,36 +310,28 @@ async function analyzeBank(bank){
   renderQueue();renderRight(bank);
 }
 
-// ── API CALL ─────────────────────────────────────────────
 async function callAPI(bank){
-  const key=getKey();
-  if(!key)throw new Error('Chưa có API Key. Tải lại trang để nhập.');
-  // Build Gemini parts
-  const parts=[{text:`Ngân hàng: ${bank.name}\nPhân tích ${bank.files.length} file sau:`}];
+  const content=[{type:'text',text:`Ngân hàng: ${bank.name}\nPhân tích ${bank.files.length} file:`}];
   for(let i=0;i<bank.files.length;i++){
     const f=bank.files[i];
-    parts.push({text:`\n[File ${i+1}: ${f.name}]`});
+    content.push({type:'text',text:`\n[File ${i+1}: ${f.name}]`});
     const b64=f.data.split(',')[1];
     const mt=f.type||(f.name.endsWith('.pdf')?'application/pdf':'image/jpeg');
-    parts.push({inline_data:{mime_type:mt.startsWith('image/')?mt:'image/jpeg',data:b64}});
+    if(mt==='application/pdf'){content.push({type:'document',source:{type:'base64',media_type:'application/pdf',data:b64}});}
+    else{content.push({type:'image',source:{type:'base64',media_type:mt.startsWith('image/')?mt:'image/jpeg',data:b64}});}
   }
   const res=await fetch('/api/analyze',{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({
-      system:SYS,
-      contents:[{role:'user',parts}]
-    })
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:8000,system:SYS,messages:[{role:'user',content}]})
   });
   if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error('API '+res.status+': '+(e.error?.message||JSON.stringify(e)));}
   const d=await res.json();
-  if(d.error)throw new Error('Gemini: '+d.error.message);
-  const text=d.candidates?.[0]?.content?.parts?.map(p=>p.text||'').join('')||'';
+  const text=d.content.map(c=>c.text||'').join('');
   let raw='';
   const fc=text.indexOf('```json');
   if(fc!==-1){const fe=text.indexOf('```',fc+7);raw=fe!==-1?text.slice(fc+7,fe).trim():text.slice(fc+7).trim();}
   else{const s=text.indexOf('{'),e=text.lastIndexOf('}');if(s!==-1&&e!==-1)raw=text.slice(s,e+1);}
-  if(!raw)throw new Error('AI không trả về JSON.');
+  if(!raw)throw new Error('AI không trả về JSON. Thử lại.');
   try{return JSON.parse(raw);}
   catch(e){
     let fx=raw.replace(/,\s*"[^"]*$/,'').replace(/,\s*$/,'');
@@ -337,34 +342,47 @@ async function callAPI(bank){
   }
 }
 
-// ── RENDER ───────────────────────────────────────────────
 function badge(s){
   const m={ok:['b-ok','Có'],missing:['b-miss','Thiếu'],na:['b-na','N/A'],flag:['b-flag','⚑ Flag'],calc:['b-calc','Calc']};
   const[c,l]=m[s]||m.missing;return`<span class="badge ${c}">${l}</span>`;
 }
+
 function renderRight(bank){
   const el=document.getElementById('rightPanel');
   if(bank.status==='processing'){
-    el.innerHTML=`<div class="loading"><div class="spinner"></div><div style="font-family:var(--mono);font-size:12px;color:var(--text2)">AI đang đọc hợp đồng...</div><div style="font-family:var(--mono);font-size:11px;color:var(--text3)">${bank.name}</div></div>`;return;
+    el.innerHTML=`<div class="loading">
+      <div class="spinner"></div>
+      <div style="font-size:13px;font-weight:500;color:var(--primary)">AI đang đọc hợp đồng...</div>
+      <div style="font-size:12px;color:var(--text3)">${bank.name} · ${bank.files.length} file</div>
+    </div>`;return;
   }
   if(bank.status==='error'){
-    el.innerHTML=`<div class="loading"><div style="font-size:30px">⚠️</div><div style="color:var(--danger);font-size:13px">Phân tích thất bại</div><div style="font-family:var(--mono);font-size:11px;color:var(--text3);max-width:320px;text-align:center">${bank.result?._err||''}</div><button class="btn-primary btn-sec btn-sm" style="width:auto;margin-top:4px" onclick="reanalyze('${bank.id}')">↺ Thử lại</button></div>`;return;
+    el.innerHTML=`<div class="loading">
+      <div style="font-size:36px">⚠️</div>
+      <div style="color:var(--danger);font-size:13px;font-weight:500">Phân tích thất bại</div>
+      <div style="font-size:11px;color:var(--text3);max-width:360px;text-align:center;line-height:1.5">${bank.result?._err||''}</div>
+      <button class="btn-primary btn-sec btn-sm" style="width:auto;margin-top:4px" onclick="reanalyze('${bank.id}')">↺ Thử lại</button>
+    </div>`;return;
   }
   if(bank.status!=='done'||!bank.result){
-    el.innerHTML=`<div class="empty"><div class="empty-icon">📋</div><div style="font-size:13px">Nhấn Phân tích để bắt đầu</div></div>`;return;
+    el.innerHTML=`<div class="empty"><div class="empty-icon">📋</div><div style="font-size:13px;font-weight:500;color:var(--text2)">Nhấn Phân tích để bắt đầu</div></div>`;return;
   }
   const r=bank.result;
   const flags=r.flags||[],conflicts=r.conflicts||[];
   const miss=ALL_FIELDS.filter(f=>!r[f.k]||r[f.k].status==='missing').length;
   let html=`<div style="display:flex;flex-direction:column;height:100%;overflow:hidden">
   <div class="rtbar">
-    <span class="rtbar-name">${bank.name}</span>
-    <span class="rtbar-meta">${bank.files.map(f=>f.name).join(' · ')}</span>
+    <div>
+      <div class="rtbar-name">${bank.name}</div>
+      <div class="rtbar-meta">${bank.files.map(f=>f.name).join(' · ')}</div>
+    </div>
     <button class="btn-primary btn-sec btn-sm" style="width:auto;margin:0" onclick="reanalyze('${bank.id}')">↺ Phân tích lại</button>
   </div>`;
-  conflicts.forEach(c=>{html+=`<div class="conflict">⚠ Mâu thuẫn <b>${c.field}</b>: ${c.file_a}→"${c.value_a}" vs ${c.file_b}→"${c.value_b}"</div>`;});
+  conflicts.forEach(c=>{html+=`<div class="conflict">⚠ Mâu thuẫn <b>${c.field}</b>: ${c.file_a} → "${c.value_a}" vs ${c.file_b} → "${c.value_b}"</div>`;});
   html+=`<div class="tbl-area">
-  <div class="col-hdr"><span>Trường</span><span>Giá trị (click để sửa)</span><span>Trạng thái</span><span>Nguồn tài liệu</span></div>`;
+  <div class="col-hdr" style="border-radius:6px 6px 0 0;margin-bottom:12px">
+    <span>Trường</span><span>Giá trị (click để sửa)</span><span>Trạng thái</span><span>Nguồn tài liệu</span>
+  </div>`;
   for(const grp of SCHEMA){
     html+=`<div class="grp"><div class="grp-hdr">${grp.g}</div>`;
     for(const f of grp.fields){
@@ -381,18 +399,24 @@ function renderRight(bank){
     html+=`</div>`;
   }
   if(flags.length){
-    html+=`<div class="grp"><div class="grp-hdr" style="color:var(--danger);border-color:rgba(239,68,68,.25)">⚑ Điểm cần lưu ý</div>`;
+    html+=`<div class="grp"><div class="grp-hdr" style="background:#b91c1c">⚑ Điểm cần lưu ý</div>`;
     flags.forEach(f=>{html+=`<div class="flag-row">⚠ ${f}</div>`;});
     html+=`</div>`;
   }
   html+=`</div>
   <div class="copybar">
-    <span class="copy-info">${bank.name} · <span style="color:var(--warn)">${flags.length} flag${flags.length!==1?'s':''}</span> · ${miss} thiếu · ${conflicts.length} mâu thuẫn</span>
-    <button class="btn-primary btn-sec btn-sm" style="width:auto;margin:0" onclick="removeBank('${bank.id}')">Xóa</button>
-    <button class="btn-primary btn-sm" id="cpb-${bank.id}" style="width:auto;margin:0" onclick="copyXL('${bank.id}')">Copy → Excel</button>
+    <div class="copy-info">
+      <b>${bank.name}</b> &nbsp;·&nbsp;
+      <span style="color:var(--warn)">${flags.length} cảnh báo</span> &nbsp;·&nbsp;
+      ${miss} trường thiếu &nbsp;·&nbsp;
+      ${conflicts.length} mâu thuẫn
+    </div>
+    <button class="btn-primary btn-sec btn-sm" style="width:auto;margin:0;color:var(--danger);border-color:var(--danger)" onclick="removeBank('${bank.id}')">Xóa</button>
+    <button class="btn-primary btn-sm" id="cpb-${bank.id}" style="width:auto;margin:0;background:var(--primary)" onclick="copyXL('${bank.id}')">📋 Copy → Excel</button>
   </div></div>`;
   el.innerHTML=html;
 }
+
 function upd(el){
   const b=banks.find(x=>x.id===el.dataset.bid);
   if(b&&b.result){b.result[el.dataset.key]={...(b.result[el.dataset.key]||{}),value:el.textContent.trim(),status:'ok'};}
@@ -400,7 +424,7 @@ function upd(el){
 function reanalyze(id){const b=banks.find(x=>x.id===id);if(b){b.status='pending';b.result=null;analyzeBank(b);}}
 function removeBank(id){
   banks=banks.filter(x=>x.id!==id);
-  if(activeId===id){activeId=null;document.getElementById('rightPanel').innerHTML=`<div class="empty"><div class="empty-icon">📋</div><div style="font-size:13px">Chọn một ngân hàng để xem kết quả</div></div>`;}
+  if(activeId===id){activeId=null;document.getElementById('rightPanel').innerHTML=`<div class="empty"><div class="empty-icon">📋</div><div style="font-size:13px;font-weight:500;color:var(--text2)">Chọn một ngân hàng để xem kết quả</div></div>`;}
   renderQueue();
 }
 function copyXL(id){
@@ -410,7 +434,7 @@ function copyXL(id){
   const v=[b.name,...ALL_FIELDS.map(f=>r[f.k]?.value||'Không ghi nhận'),b.files.map(f=>f.name).join('; ')];
   navigator.clipboard.writeText(h.join('\t')+'\n'+v.join('\t')).then(()=>{
     const btn=document.getElementById('cpb-'+id);
-    if(btn){btn.textContent='✓ Đã copy!';setTimeout(()=>{btn.textContent='Copy → Excel'},2000);}
+    if(btn){btn.textContent='✓ Đã copy!';setTimeout(()=>{btn.textContent='📋 Copy → Excel'},2000);}
   });
 }
 </script>
