@@ -433,7 +433,7 @@ async function callAPI(bank){
       'anthropic-version':'2023-06-01',
       'anthropic-dangerous-direct-browser-access':'true'
     },
-    body:JSON.stringify({model:'claude-sonnet-4-5-20251001',max_tokens:8000,system:SYS,messages:[{role:'user',content}]})
+    body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:8000,system:SYS,messages:[{role:'user',content}]})
   });
   if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error('API '+res.status+': '+(e.error?.message||JSON.stringify(e)));}
   const d=await res.json();
