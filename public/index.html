@@ -385,12 +385,7 @@ async function addBank(){
   const name=document.getElementById('bnkInp').value.trim();
   if(!name||!curFiles.length)return;
   const fdata=await Promise.all(curFiles.map(f=>compressImage(f)));
-  // Check total size
-  const totalMB=fdata.reduce((s,f)=>s+(f.data.length*0.75/1024/1024),0);
-  if(totalMB>4){
-    alert(`Tổng file quá lớn (${totalMB.toFixed(1)}MB). Với PDF scan nhiều trang, vui lòng:\n1. Chia nhỏ file PDF (mỗi file <10 trang)\n2. Hoặc scan ở độ phân giải thấp hơn (150 DPI thay vì 300 DPI)`);
-    return;
-  }
+
   const id=Math.random().toString(36).slice(2,8);
   banks.push({id,name,files:fdata,status:'pending',result:null});
   document.getElementById('bnkInp').value='';curFiles=[];renderFiles();updateAddBtn();
