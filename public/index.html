@@ -84,6 +84,9 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14
 .qi.active{background:var(--primary-light);border-color:var(--accent)}
 .qi-name{flex:1;font-size:13px;font-weight:500;color:var(--text)}
 .qi-c{font-family:var(--mono);font-size:10px;color:var(--text3)}
+.qi-del{display:none;position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text3);cursor:pointer;font-size:16px;line-height:1;padding:2px 4px;border-radius:3px;transition:all .1s}
+.qi-del:hover{color:var(--danger);background:var(--danger-bg)}
+.qi:hover .qi-del{display:block}
 .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
 .dot-pending{background:var(--text3)}
 .dot-processing{background:var(--warn);animation:pulse 1s infinite}
@@ -284,6 +287,20 @@ Trả về JSON THUẦN TÚY, không markdown, không text ngoài JSON.`;
 
 let banks=[],activeId=null,curFiles=[];
 
+async function getApiKey(){
+  let key=localStorage.getItem('cdr_apikey')||'';
+  if(!key){
+    key=prompt('Nhập Anthropic API Key (sk-ant-...):\nLấy tại: console.anthropic.com → API Keys');
+    if(!key)throw new Error('Chưa có API Key');
+    localStorage.setItem('cdr_apikey',key);
+  }
+  return key;
+}
+function clearApiKey(){
+  localStorage.removeItem('cdr_apikey');
+  alert('Đã xóa API Key. Tải lại trang để nhập key mới.');
+}
+
 // ── LOCALSTORAGE SAVE/LOAD ───────────────────────────────
 function saveBanks(){
   try{
@@ -337,12 +354,43 @@ function updateAddBtn(){
 }
 document.getElementById('bnkInp').oninput=updateAddBtn;
 
+// Compress image to max 1MB before sending
+function compressImage(file){
+  return new Promise(res=>{
+    if(file.name.toLowerCase().endsWith('.pdf')){
+      // PDF: read as-is but warn if too large
+      const r=new FileReader();
+      r.onload=e=>res({name:file.name,data:e.target.result,type:file.type,size:file.size});
+      r.readAsDataURL(file);
+      return;
+    }
+    const img=new Image();
+    const url=URL.createObjectURL(file);
+    img.onload=()=>{
+      URL.revokeObjectURL(url);
+      const MAX=1400; // max dimension px
+      let w=img.width,h=img.height;
+      if(w>MAX||h>MAX){const s=MAX/Math.max(w,h);w=Math.round(w*s);h=Math.round(h*s);}
+      const canvas=document.createElement('canvas');
+      canvas.width=w;canvas.height=h;
+      canvas.getContext('2d').drawImage(img,0,0,w,h);
+      const data=canvas.toDataURL('image/jpeg',0.82);
+      res({name:file.name.replace(/\.[^.]+$/,'.jpg'),data,type:'image/jpeg',size:data.length});
+    };
+    img.src=url;
+  });
+}
+
 async function addBank(){
   const name=document.getElementById('bnkInp').value.trim();
   if(!name||!curFiles.length)return;
-  const fdata=await Promise.all(curFiles.map(f=>new Promise(res=>{
-    const r=new FileReader();r.onload=e=>res({name:f.name,data:e.target.result,type:f.type});r.readAsDataURL(f);
-  })));
+  const fdata=await Promise.all(curFiles.map(f=>compressImage(f)));
+  // Check total size
+  const totalMB=fdata.reduce((s,f)=>s+(f.data.length*0.75/1024/1024),0);
+  if(totalMB>4){
+    alert(`Tổng file quá lớn (${totalMB.toFixed(1)}MB). Với PDF scan nhiều trang, vui lòng:\n1. Chia nhỏ file PDF (mỗi file <10 trang)\n2. Hoặc scan ở độ phân giải thấp hơn (150 DPI thay vì 300 DPI)`);
+    return;
+  }
   const id=Math.random().toString(36).slice(2,8);
   banks.push({id,name,files:fdata,status:'pending',result:null});
   document.getElementById('bnkInp').value='';curFiles=[];renderFiles();updateAddBtn();
@@ -351,10 +399,11 @@ async function addBank(){
 function renderQueue(){
   if(!banks.length){document.getElementById('qlist').innerHTML='<div style="text-align:center;padding:24px 0;color:var(--text3);font-size:12px">Chưa có ngân hàng nào / No banks added</div>';return;}
   document.getElementById('qlist').innerHTML=banks.map(b=>`
-    <div class="qi${b.id===activeId?' active':''}" onclick="selectBank('${b.id}')">
+    <div class="qi${b.id===activeId?' active':''}" onclick="selectBank('${b.id}')" style="position:relative">
       <div class="dot dot-${b.status}"></div>
       <span class="qi-name">${b.name}</span>
       <span class="qi-c">${b.fileNames?b.fileNames.length:b.files.length}f ${b.savedAt?'· '+new Date(b.savedAt).toLocaleDateString('vi-VN'):''}</span>
+      <button class="qi-del" onclick="event.stopPropagation();deleteBankById('${b.id}')" title="Xóa">×</button>
     </div>`).join('');
 }
 function selectBank(id){activeId=id;renderQueue();const b=banks.find(x=>x.id===id);if(b)renderRight(b);}
@@ -381,9 +430,15 @@ async function callAPI(bank){
     if(mt==='application/pdf'){content.push({type:'document',source:{type:'base64',media_type:'application/pdf',data:b64}});}
     else{content.push({type:'image',source:{type:'base64',media_type:mt.startsWith('image/')?mt:'image/jpeg',data:b64}});}
   }
-  const res=await fetch('/api/analyze',{
-    method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:8000,system:SYS,messages:[{role:'user',content}]})
+  const res=await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{
+      'Content-Type':'application/json',
+      'x-api-key': await getApiKey(),
+      'anthropic-version':'2023-06-01',
+      'anthropic-dangerous-direct-browser-access':'true'
+    },
+    body:JSON.stringify({model:'claude-sonnet-4-5-20251001',max_tokens:8000,system:SYS,messages:[{role:'user',content}]})
   });
   if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error('API '+res.status+': '+(e.error?.message||JSON.stringify(e)));}
   const d=await res.json();
@@ -497,6 +552,15 @@ function copyXL(id){
     const btn=document.getElementById('cpb-'+id);
     if(btn){btn.textContent='✓ Đã copy!';setTimeout(()=>{btn.textContent='📋 Copy → Excel'},2000);}
   });
+}
+function deleteBankById(id){
+  banks=banks.filter(x=>x.id!==id);
+  saveBanks();
+  if(activeId===id){
+    activeId=null;
+    document.getElementById('rightPanel').innerHTML=`<div class="empty"><div class="empty-icon">📋</div><div style="font-size:13px;font-weight:500;color:var(--text2)">Chọn ngân hàng để xem kết quả / Select a bank to view results</div></div>`;
+  }
+  renderQueue();
 }
 function clearHistory(){
   if(!confirm('Xóa toàn bộ lịch sử phân tích?'))return;
