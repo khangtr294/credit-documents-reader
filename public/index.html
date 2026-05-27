@@ -625,21 +625,40 @@ function formatVND(n){
   return n.toLocaleString('vi-VN');
 }
 
-function daysUntil(dateStr){
-  if(!dateStr||dateStr==='Không ghi nhận')return null;
-  // Try parse Vietnamese date formats
-  let d;
-  // "14/01/2025" or "14-01-2025"
-  const m1 = dateStr.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
-  if(m1) d = new Date(m1[3], m1[2]-1, m1[1]);
-  // "31/12/2025" in text
-  const m2 = dateStr.match(/(\d{1,2})\s*\/\s*(\d{1,2})\s*\/\s*(\d{4})/);
-  if(!d&&m2) d = new Date(m2[3], m2[2]-1, m2[1]);
-  // Year only "2025"
-  const m3 = dateStr.match(/(\d{4})/);
-  if(!d&&m3) d = new Date(parseInt(m3[1]), 11, 31);
+function parseViDate(str){
+  if(!str)return null;
+  // dd/mm/yyyy or dd-mm-yyyy
+  let m=str.match(/(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})/);
+  if(m)return new Date(+m[3],+m[2]-1,+m[1]);
+  // yyyy only
+  m=str.match(/\b(20\d{2})\b/);
+  if(m)return new Date(+m[1],11,31);
+  return null;
+}
+
+function calcExpiryDate(expiryStr, signDateStr){
+  if(!expiryStr||expiryStr==='Không ghi nhận'||expiryStr==='N/A')return null;
+  // If already a specific date
+  const direct = parseViDate(expiryStr);
+  if(direct)return direct;
+  // Pattern: "X tháng kể từ ngày ký" or "X năm kể từ ngày ký"
+  const mMonths = expiryStr.match(/(\d+)\s*tháng/i);
+  const mYears  = expiryStr.match(/(\d+)\s*năm/i);
+  if(mMonths||mYears){
+    const base = parseViDate(signDateStr)||new Date();
+    const d = new Date(base);
+    if(mMonths) d.setMonth(d.getMonth()+parseInt(mMonths[1]));
+    if(mYears)  d.setFullYear(d.getFullYear()+parseInt(mYears[1]));
+    return d;
+  }
+  return null;
+}
+
+function daysUntil(expiryStr, signDateStr){
+  if(!expiryStr||expiryStr==='Không ghi nhận')return null;
+  const d = calcExpiryDate(expiryStr, signDateStr);
   if(!d||isNaN(d))return null;
-  return Math.ceil((d - new Date()) / (1000*60*60*24));
+  return Math.ceil((d - new Date())/(1000*60*60*24));
 }
 
 // ── RENDER OVERVIEW ──────────────────────────────────────
@@ -658,8 +677,8 @@ function renderOverview(){
 
   // ── Expiry alerts ──
   const expiryRows = done.map(b=>{
-    const days = daysUntil(b.result.expiry_date?.value);
-    return {name:b.name, expiry:b.result.expiry_date?.value||'—', days, limit:b.result.total_limit?.value||'—'};
+    const days = daysUntil(b.result.expiry_date?.value, b.result.sign_date?.value);
+    return {name:b.name, expiry:b.result.expiry_date?.value||'—', days, limit:b.result.total_limit?.value||'—', result:b.result};
   }).sort((a,b)=>(a.days??9999)-(b.days??9999));
 
   const expiring30 = expiryRows.filter(r=>r.days!==null&&r.days<=30).length;
@@ -696,9 +715,11 @@ function renderOverview(){
           else if(r.days<0){cls='exp-red';status='🔴 Đã hết hạn / Expired';}
           else if(r.days<=30){cls='exp-red';status='🔴 Sắp hết hạn / Critical';}
           else if(r.days<=90){cls='exp-warn';status='🟡 Cần gia hạn / Warning';}
+          const calcD = calcExpiryDate(r.expiry, r.result?.sign_date?.value);
+          const calcStr = calcD&&r.expiry&&!parseViDate(r.expiry) ? ` (≈ ${calcD.toLocaleDateString('vi-VN')})` : '';
           return `<tr>
             <td><b>${r.name}</b></td>
-            <td class="${cls}">${r.expiry}</td>
+            <td class="${cls}">${r.expiry}${calcStr}</td>
             <td class="${cls}">${r.days===null?'—':r.days<0?'Đã quá hạn':`${r.days} ngày`}</td>
             <td>${r.limit}</td>
             <td>${status}</td>
