@@ -149,7 +149,22 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14
 
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.ov-card{background:var(--bg2);border-radius:8px;padding:16px 20px;box-shadow:var(--shadow);margin-bottom:16px}
+.ov-card-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--primary);margin-bottom:12px}
+.ov-stat{display:inline-block;margin-right:28px;margin-bottom:8px}
+.ov-stat-val{font-size:22px;font-weight:600;color:var(--primary)}
+.ov-stat-lbl{font-size:11px;color:var(--text3);margin-top:2px}
+.ov-table{width:100%;border-collapse:collapse;font-size:12px}
+.ov-table th{text-align:left;padding:7px 10px;background:var(--primary);color:#fff;font-weight:500;font-size:11px}
+.ov-table td{padding:7px 10px;border-bottom:1px solid var(--border)}
+.ov-table tr:hover td{background:var(--primary-light)}
+.exp-red{color:var(--danger);font-weight:600}
+.exp-warn{color:var(--warn);font-weight:500}
+.exp-ok{color:var(--success)}
+.exp-bar{height:6px;border-radius:3px;background:var(--border);margin-top:4px;overflow:hidden}
+.exp-bar-fill{height:100%;border-radius:3px}
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
 
@@ -161,7 +176,11 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14
     <span class="hdr-app-name">Credit Documents Reader</span>
     <span class="hdr-app-sub">AI-Powered · Finance Department</span>
   </div>
-  <span class="hdr-badge">CLAUDE AI</span>
+  <div style="display:flex;gap:6px;margin-left:auto;align-items:center">
+  <button id="tabDetail" onclick="switchTab('detail')" style="font-family:var(--mono);font-size:10px;padding:4px 12px;border-radius:20px;border:1px solid rgba(255,255,255,.4);background:rgba(255,255,255,.15);color:#fff;cursor:pointer;letter-spacing:.05em;">📋 DETAIL</button>
+  <button id="tabOverview" onclick="switchTab('overview')" style="font-family:var(--mono);font-size:10px;padding:4px 12px;border-radius:20px;border:1px solid rgba(255,255,255,.3);background:transparent;color:rgba(255,255,255,.7);cursor:pointer;letter-spacing:.05em;">📊 OVERVIEW</button>
+  <span class="hdr-badge" style="margin-left:8px">CLAUDE AI</span>
+</div>
 </div>
 
 <div class="layout">
@@ -198,6 +217,10 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14
       <div style="font-size:13px;font-weight:500;color:var(--text2)">Chọn ngân hàng để xem kết quả / Select a bank to view results</div>
       <div style="font-size:12px;color:var(--text3)">Hoặc thêm file và nhấn Phân tích / Add files and click Analyze</div>
     </div>
+  </div>
+  <!-- OVERVIEW PANEL -->
+  <div class="right" id="overviewPanel" style="display:none;overflow-y:auto;padding:20px;">
+    <div id="overviewContent"></div>
   </div>
 </div>
 
@@ -565,6 +588,233 @@ function clearHistory(){
   document.getElementById('rightPanel').innerHTML=`<div class="empty"><div class="empty-icon">📋</div><div style="font-size:13px;font-weight:500;color:var(--text2)">Chọn ngân hàng để xem kết quả / Select a bank to view results</div></div>`;
 }
 window.addEventListener('load', loadBanks);
+
+// ── TAB SWITCHING ────────────────────────────────────────
+function switchTab(tab){
+  const isOverview = tab==='overview';
+  document.getElementById('rightPanel').style.display = isOverview?'none':'flex';
+  document.getElementById('overviewPanel').style.display = isOverview?'flex':'none';
+  document.getElementById('tabDetail').style.background = isOverview?'transparent':'rgba(255,255,255,.15)';
+  document.getElementById('tabDetail').style.color = isOverview?'rgba(255,255,255,.7)':'#fff';
+  document.getElementById('tabDetail').style.borderColor = isOverview?'rgba(255,255,255,.3)':'rgba(255,255,255,.4)';
+  document.getElementById('tabOverview').style.background = isOverview?'rgba(255,255,255,.15)':'transparent';
+  document.getElementById('tabOverview').style.color = isOverview?'#fff':'rgba(255,255,255,.7)';
+  document.getElementById('tabOverview').style.borderColor = isOverview?'rgba(255,255,255,.4)':'rgba(255,255,255,.3)';
+  if(isOverview) renderOverview();
+}
+
+// ── PARSE AMOUNT ─────────────────────────────────────────
+function parseAmount(str){
+  if(!str||str==='Không ghi nhận'||str==='N/A')return null;
+  // Extract first number (handles "200,000,000,000 VND" or "200 tỷ" etc)
+  const cleaned = str.replace(/[,\s]/g,'');
+  const m = cleaned.match(/[\d.]+/);
+  if(!m)return null;
+  let n = parseFloat(m[0]);
+  // Convert tỷ/billion
+  if(str.match(/tỷ/i)) n = n * 1e9;
+  else if(str.match(/triệu/i)) n = n * 1e6;
+  return isNaN(n)?null:n;
+}
+
+function formatVND(n){
+  if(!n)return '—';
+  if(n>=1e12) return (n/1e12).toFixed(1)+' nghìn tỷ';
+  if(n>=1e9) return (n/1e9).toFixed(0)+' tỷ';
+  if(n>=1e6) return (n/1e6).toFixed(0)+' triệu';
+  return n.toLocaleString('vi-VN');
+}
+
+function daysUntil(dateStr){
+  if(!dateStr||dateStr==='Không ghi nhận')return null;
+  // Try parse Vietnamese date formats
+  let d;
+  // "14/01/2025" or "14-01-2025"
+  const m1 = dateStr.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+  if(m1) d = new Date(m1[3], m1[2]-1, m1[1]);
+  // "31/12/2025" in text
+  const m2 = dateStr.match(/(\d{1,2})\s*\/\s*(\d{1,2})\s*\/\s*(\d{4})/);
+  if(!d&&m2) d = new Date(m2[3], m2[2]-1, m2[1]);
+  // Year only "2025"
+  const m3 = dateStr.match(/(\d{4})/);
+  if(!d&&m3) d = new Date(parseInt(m3[1]), 11, 31);
+  if(!d||isNaN(d))return null;
+  return Math.ceil((d - new Date()) / (1000*60*60*24));
+}
+
+// ── RENDER OVERVIEW ──────────────────────────────────────
+function renderOverview(){
+  const done = banks.filter(b=>b.status==='done'&&b.result);
+  const el = document.getElementById('overviewContent');
+  if(!done.length){
+    el.innerHTML=`<div style="text-align:center;padding:60px 0;color:var(--text3)"><div style="font-size:36px;margin-bottom:12px">📊</div><div>Chưa có dữ liệu. Phân tích ít nhất 1 ngân hàng trước.</div></div>`;
+    return;
+  }
+
+  // ── Stats ──
+  const totalLimits = done.map(b=>parseAmount(b.result.total_limit?.value)).filter(x=>x);
+  const grandTotal = totalLimits.reduce((a,b)=>a+b,0);
+  const flagCount = done.reduce((s,b)=>(b.result.flags?.length||0)+s,0);
+
+  // ── Expiry alerts ──
+  const expiryRows = done.map(b=>{
+    const days = daysUntil(b.result.expiry_date?.value);
+    return {name:b.name, expiry:b.result.expiry_date?.value||'—', days, limit:b.result.total_limit?.value||'—'};
+  }).sort((a,b)=>(a.days??9999)-(b.days??9999));
+
+  const expiring30 = expiryRows.filter(r=>r.days!==null&&r.days<=30).length;
+  const expiring90 = expiryRows.filter(r=>r.days!==null&&r.days<=90&&r.days>30).length;
+
+  let html = `
+  <!-- Stats row -->
+  <div class="ov-card">
+    <div class="ov-card-title">📊 Tổng quan danh mục / Portfolio Summary</div>
+    <div>
+      <div class="ov-stat"><div class="ov-stat-val">${done.length}</div><div class="ov-stat-lbl">Ngân hàng / Banks</div></div>
+      <div class="ov-stat"><div class="ov-stat-val">${grandTotal?formatVND(grandTotal):'—'}</div><div class="ov-stat-lbl">Tổng hạn mức / Total Limit</div></div>
+      <div class="ov-stat"><div class="ov-stat-val" style="color:var(--danger)">${expiring30}</div><div class="ov-stat-lbl">Hết hạn &lt;30 ngày / Expiring &lt;30d</div></div>
+      <div class="ov-stat"><div class="ov-stat-val" style="color:var(--warn)">${expiring90}</div><div class="ov-stat-lbl">Hết hạn 30-90 ngày / Expiring 30-90d</div></div>
+      <div class="ov-stat"><div class="ov-stat-val" style="color:var(--warn)">${flagCount}</div><div class="ov-stat-lbl">Tổng cảnh báo / Total Flags</div></div>
+    </div>
+  </div>
+
+  <!-- Expiry alert table -->
+  <div class="ov-card">
+    <div class="ov-card-title">⏰ Cảnh báo hết hạn tín dụng / Credit Expiry Alerts</div>
+    <table class="ov-table">
+      <thead><tr>
+        <th>Ngân hàng / Bank</th>
+        <th>Ngày hết hạn / Expiry Date</th>
+        <th>Còn lại / Days Left</th>
+        <th>Hạn mức / Limit</th>
+        <th>Trạng thái / Status</th>
+      </tr></thead>
+      <tbody>
+        ${expiryRows.map(r=>{
+          let cls='exp-ok', status='✅ Còn hạn / Active';
+          if(r.days===null){cls='';status='— Chưa xác định';}
+          else if(r.days<0){cls='exp-red';status='🔴 Đã hết hạn / Expired';}
+          else if(r.days<=30){cls='exp-red';status='🔴 Sắp hết hạn / Critical';}
+          else if(r.days<=90){cls='exp-warn';status='🟡 Cần gia hạn / Warning';}
+          return `<tr>
+            <td><b>${r.name}</b></td>
+            <td class="${cls}">${r.expiry}</td>
+            <td class="${cls}">${r.days===null?'—':r.days<0?'Đã quá hạn':`${r.days} ngày`}</td>
+            <td>${r.limit}</td>
+            <td>${status}</td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Comparison table -->
+  <div class="ov-card">
+    <div class="ov-card-title">📋 So sánh điều khoản / Terms Comparison</div>
+    <div style="overflow-x:auto">
+    <table class="ov-table">
+      <thead><tr>
+        <th>Ngân hàng / Bank</th>
+        <th>Tổng HM / Total Limit</th>
+        <th>Lãi suất / Rate</th>
+        <th>Phí BL / Guarantee Fee</th>
+        <th>LTV</th>
+        <th>Trả nợ / Repayment</th>
+        <th>Flags</th>
+      </tr></thead>
+      <tbody>
+        ${done.map(b=>{
+          const r=b.result;
+          const fc = r.flags?.length||0;
+          return `<tr>
+            <td><b>${b.name}</b></td>
+            <td>${r.total_limit?.value||'—'}</td>
+            <td>${r.eff_rate?.value||r.base_rate?.value||'—'}</td>
+            <td>${r.guarantee_fee?.value||'—'}</td>
+            <td>${r.col_ltv?.value||'—'}</td>
+            <td>${r.principal_method?.value||'—'}</td>
+            <td>${fc>0?`<span style="color:var(--warn);font-weight:600">${fc} ⚑</span>`:'<span style="color:var(--success)">0</span>'}</td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+    </div>
+  </div>
+
+  <!-- Export button -->
+  <div style="text-align:right;margin-top:4px">
+    <button onclick="exportXLSX()" style="padding:9px 20px;background:var(--primary);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;box-shadow:var(--shadow)">
+      📥 Export tất cả → Excel / Export All to Excel
+    </button>
+  </div>`;
+
+  el.innerHTML = html;
+}
+
+// ── EXPORT XLSX ──────────────────────────────────────────
+function exportXLSX(){
+  if(typeof XLSX==='undefined'){alert('Thư viện Excel chưa tải xong. Thử lại sau vài giây.');return;}
+  const done = banks.filter(b=>b.status==='done'&&b.result);
+  if(!done.length){alert('Chưa có dữ liệu để export.');return;}
+
+  const wb = XLSX.utils.book_new();
+
+  // Sheet 1: Summary
+  const summaryData = [
+    ['CREDIT DOCUMENTS READER — HANDONG ENGINEERING & CONSTRUCTION'],
+    ['Xuất ngày / Export date:', new Date().toLocaleDateString('vi-VN')],
+    ['Số ngân hàng / Total banks:', done.length],
+    [],
+    ['Ngân hàng / Bank', 'Tổng HM / Total Limit', 'HM Vay / Loan Limit', 'Ngày hết hạn / Expiry', 'Lãi suất / Rate', 'Phí BL / Guarantee Fee', 'LTV', 'Điều khoản đặc biệt / Special Clauses', 'Số flags / Flags'],
+    ...done.map(b=>{
+      const r=b.result;
+      return [
+        b.name,
+        r.total_limit?.value||'',
+        r.loan_limit?.value||'',
+        r.expiry_date?.value||'',
+        r.eff_rate?.value||r.base_rate?.value||'',
+        r.guarantee_fee?.value||'',
+        r.col_ltv?.value||'',
+        r.special_clause?.value||'',
+        r.flags?.length||0,
+      ];
+    })
+  ];
+  const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
+  wsSummary['!cols'] = [{wch:25},{wch:22},{wch:20},{wch:18},{wch:18},{wch:18},{wch:12},{wch:40},{wch:10}];
+  XLSX.utils.book_append_sheet(wb, wsSummary, 'Summary');
+
+  // Sheet 2+: Detail per bank
+  done.forEach(b=>{
+    const r=b.result;
+    const rows = [
+      [`NGÂN HÀNG / BANK: ${b.name}`],
+      [`Files: ${(b.fileNames||b.files.map(f=>f.name)).join(', ')}`],
+      [`Phân tích ngày / Analyzed: ${b.savedAt?new Date(b.savedAt).toLocaleDateString('vi-VN'):''}`],
+      [],
+      ['Nhóm / Group', 'Trường / Field', 'Giá trị / Value', 'Trạng thái / Status', 'Nguồn / Source'],
+    ];
+    SCHEMA.forEach(grp=>{
+      grp.fields.forEach(f=>{
+        const d = r[f.k]||{};
+        rows.push([grp.g, f.l, d.value||'', d.status||'', d.source||'']);
+      });
+    });
+    if(r.flags?.length){
+      rows.push([]);
+      rows.push(['⚑ FLAGS / CẢNH BÁO','','','','']);
+      r.flags.forEach(flag=>rows.push(['',flag,'','','']));
+    }
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols'] = [{wch:30},{wch:35},{wch:40},{wch:12},{wch:20}];
+    // Shorten sheet name to 31 chars (Excel limit)
+    const sheetName = b.name.slice(0,28).replace(/[:\/\?*\[\]]/g,'');
+    XLSX.utils.book_append_sheet(wb, ws, sheetName);
+  });
+
+  XLSX.writeFile(wb, `CDR_Handong_${new Date().toISOString().slice(0,10)}.xlsx`);
+}
 </script>
 </body>
 </html>
