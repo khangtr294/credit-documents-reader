@@ -360,7 +360,12 @@ async function loadBanks(){
   try{
     const r=await fetch('/api/db');
     const d=await r.json();
-    if(d.value){parsed=JSON.parse(d.value);console.log('Loaded from KV:',parsed.length,'banks');}
+    if(d.value){
+      // Handle both string and already-parsed value
+      const raw = typeof d.value==='string' ? d.value : JSON.stringify(d.value);
+      parsed=JSON.parse(raw);
+      console.log('Loaded from KV:',parsed.length,'banks');
+    }
   }catch(e){console.warn('KV load failed, trying localStorage:',e);}
   // Fallback to localStorage
   if(!parsed){
