@@ -18,11 +18,13 @@ export default async function handler(req, res) {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await r.json();
+      // data.result is the raw stored string
       return res.status(200).json({ value: data.result });
     }
 
     if (req.method === 'POST') {
       const { banks } = req.body;
+      // Store as plain JSON string
       const r = await fetch(`${url}/set/${KEY}`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
