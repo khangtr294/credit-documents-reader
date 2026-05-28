@@ -361,10 +361,14 @@ async function loadBanks(){
     const r=await fetch('/api/db');
     const d=await r.json();
     if(d.value){
-      // Handle both string and already-parsed value
-      const raw = typeof d.value==='string' ? d.value : JSON.stringify(d.value);
-      parsed=JSON.parse(raw);
-      console.log('Loaded from KV:',parsed.length,'banks');
+      // Unwrap: d.value is a string containing JSON with a "value" key
+      let raw = typeof d.value==='string' ? JSON.parse(d.value) : d.value;
+      // If still wrapped in {value:...}, unwrap again
+      if(raw && typeof raw==='object' && raw.value) raw = typeof raw.value==='string' ? JSON.parse(raw.value) : raw.value;
+      if(Array.isArray(raw)){
+        parsed=raw;
+        console.log('Loaded from KV:',parsed.length,'banks');
+      }
     }
   }catch(e){console.warn('KV load failed, trying localStorage:',e);}
   // Fallback to localStorage
